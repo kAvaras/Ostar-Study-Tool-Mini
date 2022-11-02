@@ -1,0 +1,523 @@
+from tkinter import *
+from tkinter import messagebox
+from tkinter import colorchooser
+import tkinter.scrolledtext as st
+import datetime, gtts, os
+root = Tk()
+root.title("OSTAR Study Tool")
+root.geometry("1200x600")
+root.resizable(False, False)
+try:
+    root.iconbitmap("ostar.ico")
+except:
+    pass
+lpingamount= []
+text_color = "white"
+background_color = "black"
+labelsid = []
+lreason = []
+labels = []
+alarm = []
+tab = ""
+accentlist = []
+accentuse = "en"
+scheduler_clear_check = 0
+sticky_clear_check = 0
+tts_clear_check = 0
+sticky_bg_color = "yellow"
+sticky_fg_color = "black"
+clockterminate = 0
+def fg_time_color():
+    global text_color
+    fg_color = colorchooser.askcolor(title="Choose Text Color")
+    text_color = fg_color[1]
+    printtime.config(fg=text_color)
+def bg_time_color():
+    global background_color
+    bg_color = colorchooser.askcolor(title="Choose Background Color")
+    background_color = bg_color[1]
+    printtime.config(bg=background_color)
+def schedulerwipe():
+    global alarm
+    global labelsid
+    global lreason
+    global lpingamount
+    global sortlabel
+    alarm = []
+    labelsid = []
+    lreason = []
+    lpingamount = []
+    sortlabel = []
+    schedulearea.config(state="normal")
+    schedulearea.delete('1.0', END)
+    schedulearea.config(state="disable")
+def scheduler():
+    stickyhide()
+    texttospeechhide()
+    root.geometry("1200x600")
+    global instructions
+    global inserttime
+    global typetime
+    global printtime
+    global insertreason
+    global typereason
+    global insertpingamount
+    global typepingamount
+    global donebutton
+    global currenttime
+    global fg_colorbutton
+    global bg_colorbutton
+    global text_color
+    global background_color
+    global temp
+    global tab
+    global timelist
+    global scheduler_clear_check
+    global schedulearea
+    global clearall
+    global clockterminate
+    error = Label(root, text="Badlist! Unsatified Format!", fg="red", font=("Arial", 23))
+    scheduler_clear_check += 1
+    if scheduler_clear_check > 1:
+        inserttime.place_forget()
+        typetime.place_forget()
+        insertreason.place_forget()
+        typereason.place_forget()
+        insertpingamount.place_forget()
+        typepingamount.place_forget()
+        donebutton.place_forget()
+        printtime.place_forget()
+        fg_colorbutton.place_forget()
+        bg_colorbutton.place_forget()
+        schedulearea.place_forget()
+        error.place_forget()
+    tab = "scheduler"
+    inserttime = Button(root, text="Insert Time(hour:minute:second)", height=1, width=30, font=("Arial", 9))
+    typetime = Entry(font=("Arial", 9))
+    insertreason = Button(root, text="Insert Reason", height=1, width=30, font=("Arial", 9))
+    typereason = Entry(font=("Arial", 9))
+    insertpingamount = Button(root, text="Ping Amount", height=1, width=30, font=("Arial", 9))
+    typepingamount = Entry(font=("Arial", 9))
+    donebutton = Button(root, text="Done", font=("Arial", 30), height=1, width=16, fg="yellow", bg="green",command=schedulercheck)
+    fg_colorbutton = Button(root, text="Text Color", command=fg_time_color, height=1, width=55)
+    bg_colorbutton = Button(root, text="Background Color", command=bg_time_color, height=1, width=55)
+    schedulearea = st.ScrolledText(root, width=45, height=15, state='disabled')
+    clearall = Button(root, text="Clear Every Event", font=("Arial", 15), height=1, width=33, fg="black", bg="red",command=schedulerwipe)
+    inserttime.place(x=0, y=70)
+    typetime.place(x=230, y=74)
+    insertreason.place(x=0, y=100)
+    typereason.place(x=230, y=104)
+    insertpingamount.place(x=0, y=130)
+    typepingamount.place(x=230, y=134)
+    donebutton.place(x=0, y=160)
+    fg_colorbutton.place(x=400, y=380)
+    bg_colorbutton.place(x=790, y=380)
+    temp = datetime.datetime.now()
+    currenttime = temp.strftime("%H:%M:%S")
+    printtime = Label(root, text=f"{currenttime}", font=("Arial", 150), fg=text_color, bg=background_color)
+    printtime.place(x=400, y=150)
+    timelist = st.ScrolledText(root)
+    schedulearea.place(x=0, y=240)
+    clearall.place(x=0, y=500)
+    if clockterminate == 0:
+        clock()
+        clockterminate = 1
+def schedulercheck():
+    global alarm
+    global labelsid
+    global lreason
+    global lpingamount
+    global whole
+    global num
+    global a
+    global b
+    global c
+    global error
+    whole = ""
+    badlist = False
+    error = Label(root, text="Badlist! Unsatified Format!", fg="red", font=("Arial", 23))
+    a = typetime.get()
+    b = typereason.get()
+    c = typepingamount.get()
+    try:
+        for i in labels:
+            i.place_forget()
+    except:
+        pass
+    if a != "":
+        timeget = a.split(":")
+        if len(timeget) != 3:
+            badlist = True
+        try:
+            if int(timeget[0]) > 24 or int(timeget[0]) < 0 or len(timeget[0]) != 2 or "-" in timeget[0]:
+                badlist = True
+            if int(timeget[1]) > 59 or int(timeget[1]) < 0 or len(timeget[1]) != 2 or "-" in timeget[1]:
+                badlist = True
+            if int(timeget[2]) > 59 or int(timeget[2]) < 0 or len(timeget[2]) != 2 or "-" in timeget[2]:
+                badlist = True
+            if a > "24:00:00" or a < "00:00:00":
+                badlist = True
+            for i in alarm:
+                dupchecksplit = i.split(":")
+                if dupchecksplit[0] == timeget[0] and dupchecksplit[1] == timeget[1]:
+                    badlist = True
+        except:
+            print("a")
+            badlist = True
+
+    if b != "":
+        reasonget = b
+    if c != "":
+        try:
+            c = int(c)
+        except:
+            badlist = True
+    elif a and b and c == "" or a == "" or b == "" or c == "":
+        badlist = True
+    if badlist == True:
+        error.place(x=5, y=250)
+        labels.append(error)
+    elif badlist != True:
+        whole = f"Time: {a} || Reason: {reasonget}"
+        alarm.append(a)
+        lreason.append(reasonget)
+        lpingamount.append(c)
+        labelsid.append(whole)
+def closesttime(target, lst):
+    organized = []
+    done = []
+    organized = sorted(lst)
+    organized.append(target)
+    organized = sorted(organized)
+    findindex = organized.index(target)
+    next = (len(organized) - findindex) -1
+    if next == 0:
+        organized.remove(target)
+        for i in organized:
+            done.append(i)
+    elif next != 0:
+        for i in range(1, next + 1):
+            done.append(organized[findindex + i])
+        for i in done:
+            try:
+                organized.remove(i)
+            except:
+                pass
+        for i in organized:
+            done.append(i)
+        done.remove(target)
+    return done
+
+
+def clock():
+    global currenttime
+    global sortlabel
+    temp = datetime.datetime.now()
+    currenttime = temp.strftime("%H:%M:%S")
+    schedulearea.config(state="normal")
+    schedulearea.delete('1.0', END)
+    schedulearea.config(state="disable")
+    sortlabel = closesttime(currenttime, alarm)
+    if tab == "scheduler":
+        temp = datetime.datetime.now()
+        currenttime = temp.strftime("%H:%M:%S")
+        printtime.config(text=currenttime)
+        schedulearea.config(state="normal")
+        schedulearea.delete('1.0', END)
+        schedulearea.config(state="disable")
+        for i in sortlabel:
+            tempindex = alarm.index(i)
+            schedulearea.config(state="normal")
+            schedulearea.insert(END,labelsid[tempindex] + "\n")
+            schedulearea.config(state="disable")
+        for i in range(len(labelsid)):
+            try:
+                if alarm[i] == currenttime:
+                    for _ in range(int(lpingamount[i])):
+                        messagebox.showinfo(f"Alarm", f"Time: {alarm[i]} || Reason: {lreason[i]}")
+                    lreason.remove(lreason[i])
+                    alarm.remove(alarm[i])
+                    labelsid.remove(labelsid[i])
+                    lpingamount.remove(lpingamount[i])
+                    schedulearea.config(state="normal")
+                    schedulearea.delete('1.0', END)
+                    schedulearea.config(state="disable")
+            except:
+                pass
+    if tab != "Scheduler":
+        for i in range(len(labelsid)):
+            try:
+                if alarm[i] == currenttime:
+                    for _ in range(int(lpingamount[i])):
+                        messagebox.showinfo(f"Alarm", f"Time: {alarm[i]} || Reason: {lreason[i]}")
+                    lreason.remove(lreason[i])
+                    alarm.remove(alarm[i])
+                    labelsid.remove(labelsid[i])
+                    lpingamount.remove(lpingamount[i])
+            except:
+                pass
+    root.after(1000, clock)
+def schedulerhide():
+    try:
+        inserttime.place_forget()
+        typetime.place_forget()
+        insertreason.place_forget()
+        typereason.place_forget()
+        insertpingamount.place_forget()
+        typepingamount.place_forget()
+        donebutton.place_forget()
+        printtime.place_forget()
+        fg_colorbutton.place_forget()
+        bg_colorbutton.place_forget()
+        schedulearea.place_forget()
+        error.place_forget()
+    except:
+        pass
+
+def sticky_fg_choose():
+    global sticky_fg_color
+    temp = colorchooser.askcolor(title="Choose Sticky Text Color", color="brown")
+    sticky_fg_color = temp[1]
+    stickybuttonupdate()
+def sticky_bg_choose():
+    global sticky_bg_color
+    temp = colorchooser.askcolor(title="Choose Sticky Color", color="yellow")
+    sticky_bg_color = temp[1]
+    stickybuttonupdate()
+def stickycreate():
+    global subroot
+    global stickybadlist
+    global stickyerror
+    stickybadlist = False
+    stickyerror = Label(root, text="Badlist!", fg="red", font=("Arial", 14))
+    size = stickysizetype.get()
+    title = stickynametype.get()
+    font = stickyfonttype.get()
+    try:
+        size = int(size)
+        if size == "" or size > 1000:
+            stickybadlist = True
+    except:
+        stickybadlist = True
+    try:
+        if title == "":
+            stickybadlist = True
+    except:
+        stickybadlist = True
+    try:
+        font = int(font)
+        if font == "":
+            stickybadlist = True
+    except:
+        stickybadlist = True
+    if stickybadlist == True:
+        stickyerror.place(x=130, y=240)
+    if stickybadlist == False:
+        subroot = Toplevel(root)
+        subroot.geometry(f"{size}x{size}")
+        subroot.title(title)
+        text_area = st.ScrolledText(subroot, bg=sticky_bg_color, fg=sticky_fg_color, width=root.winfo_screenwidth(), height=root.winfo_screenheight(), font=("Arial", font)).pack()
+def stickybuttonupdate():
+    global sticky_fg_color
+    global sticky_bg_color
+    try:
+        if sticky_bg_color != None:
+            sticky_fg.config(bg=sticky_bg_color)
+            sticky_bg.config(bg=sticky_bg_color)
+    except:
+        pass
+    try:
+        if sticky_fg_color != None:
+            sticky_fg.config(fg=sticky_fg_color)
+            sticky_bg.config(fg=sticky_fg_color)
+    except:
+        pass
+def stickynotes():
+    texttospeechhide()
+    schedulerhide()
+    root.geometry("325x400")
+    global tab
+    global stickyname
+    global stickynametype
+    global stickysize
+    global stickysizetype
+    global stickyfont
+    global stickyfonttype
+    global sticky_bg
+    global sticky_fg
+    global createbutton
+    global sticky_clear_check
+    global sticky_bg_color
+    global sticky_fg_color
+    global stickyerror
+    stickyerror = Label(root, text="Badlist!", fg="red", font=("Arial", 14))
+    sticky_clear_check += 1
+    if sticky_clear_check > 1:
+        stickyname.place_forget()
+        stickynametype.place_forget()
+        stickysize.place_forget()
+        stickysizetype.place_forget()
+        stickyfont.place_forget()
+        stickyfonttype.place_forget()
+        sticky_bg.place_forget()
+        sticky_fg.place_forget()
+        createbutton.place_forget()
+        stickyerror.place_forget()
+    tab = "sticky"
+    stickyname = Button(root, text="Sticky Note Name:", font=("Arial", 9), height=1, width=15)
+    stickynametype = Entry(font=("Arial", 9))
+    stickysize = Button(root, text="Sticky Note Size:", font=("Arial", 9), height=1, width=15)
+    stickysizetype = Entry(font=("Arial", 9))
+    stickyfont = Button(root, text="Sticky Font Size:", font=("Arial", 9), height=1, width=15)
+    stickyfonttype = Entry(font=("Arial", 9))
+    sticky_bg = Button(root, text="Choose Sticky Background Color", font=("Arial", 9), height=1, width=45, command=sticky_bg_choose)
+    sticky_fg = Button(root, text="Choose Sticky Text Color", font=("Arial", 9), height=1, width=45, command=sticky_fg_choose)
+    createbutton = Button(root, text="Create", bg="green", font=("Arial", 9), height=2, width=45, command=stickycreate)
+    stickyname.place(x=0, y=40)
+    stickynametype.place(x=120, y=43)
+    stickysize.place(x=0, y=70)
+    stickysizetype.place(x=120, y=73)
+    stickyfont.place(x=0, y=100)
+    stickyfonttype.place(x=120, y=103)
+    sticky_bg.place(x=0, y=130)
+    sticky_fg.place(x=0, y=160)
+
+    createbutton.place(x=0, y=190)
+
+def stickyhide():
+    try:
+        stickyname.place_forget()
+        stickynametype.place_forget()
+        stickysize.place_forget()
+        stickysizetype.place_forget()
+        stickyfont.place_forget()
+        stickyfonttype.place_forget()
+        sticky_bg.place_forget()
+        sticky_fg.place_forget()
+        createbutton.place_forget()
+        stickyerror.place_forget()
+    except:
+        pass
+def ttssay():
+    global videoduration
+    global limiterror
+    global speecherror
+    global labeltext
+    global playmp3
+    badlist = False
+    checktext = ttstext.get(1.0, "end-1c")
+    try:
+        limiterror.place_forget()
+    except:
+        pass
+    try:
+        os.system("del tts.mp3")
+    except:
+        pass
+    if checktext != "":
+        say = gtts.gTTS(text=checktext, lang=accentuse)
+        say.save("tts.mp3")
+        try:
+            os.system('tts.mp3')
+        except:
+            pass
+    elif checktext == "":
+        pass
+def ttslangchange():
+    pass
+def fen():
+    global accentuse
+    ttswidgetreset()
+    accentuse = "en"
+    aen.config(bg="green")
+def ffr():
+    global accentuse
+    ttswidgetreset()
+    accentuse = "fr"
+    afr.config(bg="green")
+def fzh():
+    global accentuse
+    ttswidgetreset()
+    accentuse = "zh"
+    azh.config(bg="green")
+def fpt():
+    global accentuse
+    ttswidgetreset()
+    accentuse = "pt"
+    apt.config(bg="green")
+def fes():
+    global accentuse
+    ttswidgetreset()
+    accentuse = "es"
+    aes.config(bg="green")
+def ttswidgetreset():
+    for i in accentlist:
+        i.config(bg="white")
+def texttospeech():
+    stickyhide()
+    schedulerhide()
+    root.geometry("1200x600")
+    global tab
+    global accents
+    global ttstext
+    global saybutton
+    global aen
+    global afr
+    global azh
+    global apt
+    global aes
+    global accentlist
+    global tts_clear_check
+    tab = "texttospeech"
+    tts_clear_check += 1
+    if tts_clear_check > 1:
+        ttstext.place_forget()
+        saybutton.place_forget()
+        aen.place_forget()
+        afr.place_forget()
+        azh.place_forget()
+        apt.place_forget()
+        aes.place_forget()
+    ttstext = st.ScrolledText(root, width=147, height=28)
+    saybutton = Button(root, text="Text To Speech", width=13, height=2, bg="green", command=ttssay)
+    aen = Button(root, text="English", command=fen, width=10, height=2, bg="white")
+    afr = Button(root, text="Français", command=ffr, width=10, height=2, bg="white")
+    azh = Button(root, text="中文", command=fzh, width=10, height=2, bg="white")
+    apt = Button(root, text="Português", command=fpt, width=10, height=2, bg="white")
+    aes = Button(root, text="Español", command=fes, width=10, height=2, bg="white")
+    ttstext.place(x=0, y=120)
+    saybutton.place(x=1100, y=60)
+    aen.place(x=0,y=60)
+    afr.place(x=80,y=60)
+    azh.place(x=160,y=60)
+    apt.place(x=240,y=60)
+    aes.place(x=320,y=60)
+    accentlist.append(aen)
+    accentlist.append(afr)
+    accentlist.append(azh)
+    accentlist.append(apt)
+    accentlist.append(aes)
+def texttospeechhide():
+    try:
+        ttstext.place_forget()
+        saybutton.place_forget()
+        aen.place_forget()
+        afr.place_forget()
+        azh.place_forget()
+        apt.place_forget()
+        aes.place_forget()
+    except:
+        pass
+scheduler_tab = Button(root, text="Scheduler", pady=2, padx=4, command=scheduler, bg="yellow")
+scheduler_tab.grid(column=1, row=1)
+sticky_tab = Button(root, text="Sticky Notes", pady=2, padx=4, command=stickynotes, bg="yellow")
+sticky_tab.grid(column=2, row=1)
+tts = Button(root, text="Text To Speech", pady=2, padx=4, command=texttospeech, bg="yellow")
+tts.grid(column=3, row=1)
+root.mainloop()
+
+
+
+
+
+
